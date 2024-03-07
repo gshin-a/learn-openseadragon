@@ -9,11 +9,23 @@ body {
     height: 100vh;
 }
 
-.zoom_btn {
+.btn_wrapper {
     position: absolute;
     top: 0;
     right: 0;
-    background-color: white;
     z-index: 5;
+}
+
+.btn_wrapper > button {
+    background-color: white;
     cursor: pointer;
+}
+
+.fixed-el {
+    width: 5px;
+    height: 5px;
+    transform: translate(-50%, -50%);
+    background-color: red;
+    border-radius: 50%;
+    z-index: 99;
 }
