@@ -18,44 +18,89 @@ const viewer = OpenSeadragon({
     showNavigator: true,
     navigatorPosition: "BOTTOM_RIGHT",
 
-    // overlays: [{
-    //     id: 'fixed-el-0', // Green overlay
-    //     x: 0.059,
-    //     y: 0.08
-    // }]
 });
 
 let DOMArr = [];
 
-const handleAddComment = (event) => {
-    // The canvas-click event gives us a position in web coordinates.
-    var webPoint = event.position;
+let commentMode = false;
+let selectionMode = false;
+let drag = null;
+
+new OpenSeadragon.MouseTracker({
+    element: viewer.element,
+    pressHandler: function(event) {
+        if(commentMode){
+            // The canvas-click event gives us a position in web coordinates.
+            var webPoint = event.position;
+                
+            // Convert that to viewport coordinates, the lingua franca of OpenSeadragon coordinates.
+            var viewportPoint = viewer.viewport.pointFromPixel(webPoint);
+
+            // Convert from viewport coordinates to image coordinates.
+            var imagePoint = viewer.viewport.viewportToImageCoordinates(viewportPoint);
+
+            console.log(viewportPoint, viewportPoint.toString(),imagePoint,  imagePoint.toString())
+
+            const fixedElDOM = document.createElement("div");
+            fixedElDOM.id = `fixed-el-${DOMArr.length}`;
+            fixedElDOM.className = 'fixed-el';
+            DOMArr.push(fixedElDOM.id);
+            console.log('DOMArr',DOMArr, fixedElDOM);
+            viewer.addOverlay({
+                element: fixedElDOM,
+                location: new OpenSeadragon.Point(viewportPoint.x, viewportPoint.y)
+            })
+        }else if(selectionMode){
+            var overlayElement = document.createElement('div');
+            overlayElement.style.background = 'red';
+            overlayElement.className = "ruler"
+            var viewportPos = viewer.viewport.pointFromPixel(event.position);
+            viewer.addOverlay(overlayElement, new OpenSeadragon.Rect(viewportPos.x, viewportPos.y, 0, 0));
+            
+            drag = {
+              overlayElement: overlayElement, 
+              startPos: viewportPos
+            };
+        }        
+    },
+    dragHandler: function(event) {
+        if (!drag) {
+          return;
+        }
         
-    // Convert that to viewport coordinates, the lingua franca of OpenSeadragon coordinates.
-    var viewportPoint = viewer.viewport.pointFromPixel(webPoint);
+        var viewportPos = viewer.viewport.pointFromPixel(event.position);
+        var diffX = viewportPos.x - drag.startPos.x;
+        var diffY = viewportPos.y - drag.startPos.y;
 
-    // Convert from viewport coordinates to image coordinates.
-    var imagePoint = viewer.viewport.viewportToImageCoordinates(viewportPoint);
+        const radian = Math.atan2(Math.abs(diffY), Math.abs(diffX));
+        const degree = radian * 180 / Math.PI;
 
-    console.log(viewportPoint, viewportPoint.toString(),imagePoint,  imagePoint.toString())
-
-    const fixedElDOM = document.createElement("div");
-    fixedElDOM.id = `fixed-el-${DOMArr.length}`;
-    fixedElDOM.className = 'fixed-el';
-    DOMArr.push(fixedElDOM.id);
-    console.log('DOMArr',DOMArr, fixedElDOM);
-    viewer.addOverlay({
-        element: fixedElDOM,
-        location: new OpenSeadragon.Point(viewportPoint.x, viewportPoint.y)
-    })
-}
+        console.log(radian, degree)
+        
+        var location = new OpenSeadragon.Rect(
+            Math.min(drag.startPos.x, drag.startPos.x + diffX), 
+            Math.min(drag.startPos.y, drag.startPos.y + diffY), 
+            Math.abs(diffX), 
+            Math.abs(diffY)
+        );
+        
+        viewer.updateOverlay(drag.overlayElement, location);
+    },
+        releaseHandler: function() {      
+        if(drag) drag = null;
+        //   selectionMode = false;
+        //   viewer.setMouseNavEnabled(true);
+    }
+})
 
 function activateComment() {
-    viewer.addHandler('canvas-click', handleAddComment);
+    commentMode = true;
+    viewer.setMouseNavEnabled(false);
 }
 
 function deactivateComment() {
-    viewer.removeHandler('canvas-click', handleAddComment);
+    commentMode = false;
+    viewer.setMouseNavEnabled(true);
 }
 
 
@@ -66,7 +111,16 @@ const detectZoom = (zoom) => {
   
 viewer.addHandler('zoom', detectZoom)
 
-const handlebtnclick = () => {
-    console.log('button click')
+const zoomTo20Level = () => {
     viewer.viewport.zoomTo(20);
+}
+
+function activateRuler () {
+    selectionMode = true;
+    viewer.setMouseNavEnabled(false);
+}
+
+function deactivateRuler () {
+    selectionMode = false;
+    viewer.setMouseNavEnabled(true);
 }

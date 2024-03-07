@@ -29,3 +29,7 @@ body {
     border-radius: 50%;
     z-index: 99;
 }
+
+.ruler {
+    /* height: 5px !important; */
+}

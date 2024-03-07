@@ -10,9 +10,11 @@
 
 <body>
     <div class="btn_wrapper">
+        <button onclick="activateRuler()">길이 측정 활성화</button>
+        <button onclick="deactivateRuler()">길이 측정 비활성화</button>
         <button onclick="activateComment()">코멘트 활성화</button>
         <button onclick="deactivateComment()">코멘트 비활성화</button>
-        <button onclick="handlebtnclick()">x20으로 이동</button>
+        <button onclick="zoomTo20Level()">x20으로 이동</button>
     </div>
     <div id="seadragon-viewer" style="width:100%; height:100%;"></div>
     <script src="openseadragon/openseadragon.min.js"></script>
